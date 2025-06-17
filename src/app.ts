@@ -93,6 +93,37 @@ function validate(input: Validatable) {
   return isValid;
 }
 
+class ProjectList {
+  public templateElement: HTMLTemplateElement;
+  public hostElement: HTMLDivElement;
+  public element: HTMLElement;
+  public listHeader: HTMLHeadingElement;
+  constructor(private type: "Active" | "Finished") {
+    this.templateElement = document.getElementById(
+      "project-list",
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById("app")! as HTMLDivElement;
+    this.element = document.querySelector(
+      ".projects",
+    )! as HTMLTableSectionElement;
+
+    const importedNode = document.importNode(
+      this.templateElement.content,
+      true,
+    );
+    this.element = importedNode.firstElementChild as HTMLElement;
+    this.element.id = this.type;
+
+    this.listHeader = this.element.querySelector("h2")! as HTMLHeadingElement;
+    this.listHeader.insertAdjacentText("afterbegin", this.type);
+    this.attach();
+  }
+
+  private attach() {
+    this.hostElement.insertAdjacentElement("beforeend", this.element);
+  }
+}
+
 class ProjectInput {
   public templateElement: HTMLTemplateElement;
   public hostElement: HTMLDivElement;
@@ -187,3 +218,5 @@ class ProjectInput {
 }
 
 const prjInput = new ProjectInput();
+const activeProjectsList = new ProjectList("Active");
+const inactiveProjectsList = new ProjectList("Finished");
