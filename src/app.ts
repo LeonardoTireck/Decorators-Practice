@@ -74,7 +74,6 @@ interface Validatable {
 }
 
 function validate(input: Validatable) {
-  console.log(input);
   let isValid = true;
   if (input.required) {
     isValid = isValid && input.value.toString().trim().length > 0;
