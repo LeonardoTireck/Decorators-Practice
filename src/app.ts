@@ -10,6 +10,7 @@
 //   });
 // }
 
+// TS Experimental Decorators Example
 function autobind(
   _target: any,
   _methodName: string,
@@ -23,6 +24,74 @@ function autobind(
     },
   };
   return adjustedDescriptor;
+}
+// Valid decorator for validating the input, using TS Experimental Decorators
+// commented because i want to try a different approach
+//
+// function trimValidator(
+//   _target: any,
+//   _methodName: any,
+//   descriptor: PropertyDescriptor,
+// ) {
+//   const originalMethod = descriptor.value;
+//
+//   descriptor.value = function (...args: any[]) {
+//     const result = originalMethod.apply(this, args);
+//     if (
+//       !Array.isArray(result) ||
+//       typeof result[0] !== "string" ||
+//       typeof result[1] !== "string" ||
+//       typeof result[2] !== "number"
+//     ) {
+//       console.warn("Unexpected return format from decorated method.");
+//       return;
+//     }
+//     const [title, description, people] = result;
+//
+//     if (
+//       title.trim().length === 0 ||
+//       description.trim().length === 0 ||
+//       String(people).trim().length === 0
+//     ) {
+//       alert("Invalid input.");
+//       return;
+//     }
+//
+//     return result;
+//   };
+//
+//   return descriptor;
+// }
+//
+
+interface Validatable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
+function validate(input: Validatable) {
+  console.log(input);
+  let isValid = true;
+  if (input.required) {
+    isValid = isValid && input.value.toString().trim().length > 0;
+  }
+  if (input.minLength != null && typeof input.value === "string") {
+    isValid = isValid && input.value.length >= input.minLength;
+  }
+  if (input.maxLength != null && typeof input.value === "string") {
+    isValid = isValid && input.value.length <= input.maxLength;
+  }
+  if (input.min != null && typeof input.value === "number") {
+    isValid = isValid && input.value >= input.min;
+  }
+  if (input.max != null && typeof input.value === "number") {
+    isValid = isValid && input.value <= input.max;
+  }
+  return isValid;
 }
 
 class ProjectInput {
@@ -58,22 +127,39 @@ class ProjectInput {
     this.attach();
   }
 
+  // @trimValidator
   private gatherUserInput(): [string, string, number] | void {
     const enteredTitle = this.titleEl.value;
     const enteredDescription = this.descriptionEl.value;
     const enteredPeople = this.peopleEl.value;
 
+    const titleValidatable: Validatable = {
+      value: enteredTitle,
+      required: true,
+      minLength: 4,
+    };
+    const descriptionValidatable: Validatable = {
+      value: enteredDescription,
+      required: true,
+      minLength: 10,
+    };
+    const peopleValidatable: Validatable = {
+      value: +enteredPeople,
+      required: true,
+      min: 1,
+      max: 5,
+    };
     if (
-      enteredTitle.trim().length === 0 ||
-      enteredDescription.trim().length === 0 ||
-      enteredPeople.trim().length === 0
+      !validate(titleValidatable) ||
+      !validate(descriptionValidatable) ||
+      !validate(peopleValidatable)
     ) {
       alert("Invalid input.");
       return;
-    } else {
-      return [enteredTitle, enteredDescription, +enteredPeople];
     }
+    return [enteredTitle, enteredDescription, +enteredPeople];
   }
+  //
 
   private clearInputs() {
     this.titleEl.value = "";
