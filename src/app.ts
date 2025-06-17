@@ -93,30 +93,67 @@ function validate(input: Validatable) {
   return isValid;
 }
 
+class Project {
+  public title: string;
+  public description: string;
+  public people: number;
+  public type: "active" | "finished";
+  public templateElement: HTMLTemplateElement;
+  public hostElement: HTMLElement;
+  public listItem: HTMLElement;
+  constructor(
+    title: string,
+    description: string,
+    people: number,
+    type: "active" | "finished",
+  ) {
+    this.title = title;
+    this.description = description;
+    this.people = people;
+    this.type = type;
+    this.templateElement = document.getElementById(
+      "single-project",
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById(
+      "active-projects-list",
+    )! as HTMLElement;
+    this.listItem = document.importNode(this.templateElement.content, true)
+      .firstElementChild as HTMLElement;
+    this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
+
+    this.attach();
+  }
+  private attach() {
+    this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
+  }
+}
+
 class ProjectList {
   public templateElement: HTMLTemplateElement;
   public hostElement: HTMLDivElement;
   public element: HTMLElement;
-  public listHeader: HTMLHeadingElement;
-  constructor(private type: "Active" | "Finished") {
+  constructor(private type: "active" | "finished") {
     this.templateElement = document.getElementById(
       "project-list",
     )! as HTMLTemplateElement;
     this.hostElement = document.getElementById("app")! as HTMLDivElement;
-    this.element = document.querySelector(
-      ".projects",
-    )! as HTMLTableSectionElement;
 
-    const importedNode = document.importNode(
-      this.templateElement.content,
-      true,
-    );
-    this.element = importedNode.firstElementChild as HTMLElement;
-    this.element.id = this.type;
+    // const importedNode = document.importNode(
+    //   this.templateElement.content,
+    //   true,
+    // ).firstElementChild;
+    this.element = document.importNode(this.templateElement.content, true)
+      .firstElementChild as HTMLElement;
 
-    this.listHeader = this.element.querySelector("h2")! as HTMLHeadingElement;
-    this.listHeader.insertAdjacentText("afterbegin", this.type);
+    this.renderContent();
     this.attach();
+  }
+
+  private renderContent() {
+    this.element.id = this.type + "-projects";
+    this.element.querySelector("ul")!.id = `${this.type}-projects-list`;
+    this.element.querySelector("h2")!.textContent =
+      this.type.toUpperCase() + " PROJECTS";
   }
 
   private attach() {
@@ -203,7 +240,9 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput;
-      console.log(title, description, people);
+      let newProject = new Project(title, description, people, "active");
+
+      console.log(newProject);
       this.clearInputs();
     }
   }
@@ -218,5 +257,5 @@ class ProjectInput {
 }
 
 const prjInput = new ProjectInput();
-const activeProjectsList = new ProjectList("Active");
-const inactiveProjectsList = new ProjectList("Finished");
+const activeProjectsList = new ProjectList("active");
+const inactiveProjectsList = new ProjectList("finished");
