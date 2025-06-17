@@ -1,4 +1,7 @@
-// ES DECORATOR EXAMPLE
+// ECMASCIRPT DECORATOR EXAMPLE
+// function autobind(
+//   _target: (...args: any[]) => any,
+//   context: ClassMethodDecoratorContext,
 // ) {
 //   context.addInitializer(function (this: any) {
 //     if (context.private)
@@ -7,7 +10,6 @@
 //   });
 // }
 
-// Experimental Decorator Example
 function autobind(
   _target: any,
   _methodName: string,
