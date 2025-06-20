@@ -140,22 +140,20 @@ class ProjectState {
   private projects: any[] = [];
   private static instance: ProjectState;
   private observers: Observer[] = [];
-  private constructor() {
-    this.projects = [];
-  }
+  private constructor() {}
 
-  public attach(observer: any) {
+  public attach(observer: Observer) {
     // check if observer is already attached
     const isExist = this.observers.includes(observer);
     if (isExist) {
       return console.log("Observer already attached.");
     } else {
-      console.log(`Attached and observer: ${observer}`);
+      console.log(`Attached an observer`);
       this.observers.push(observer);
     }
   }
 
-  public detach(observer: any) {
+  public detach(observer: Observer) {
     const obsIndex = this.observers.indexOf(observer);
     if (obsIndex === -1) {
       return console.log("Non-existent observer");
@@ -168,8 +166,10 @@ class ProjectState {
   public notify() {
     console.log("Notifying observers...");
     for (const observer of this.observers) {
-      observer.update(this);
+      const projectsCopy = this.projects.slice();
+      observer.update(projectsCopy);
     }
+    console.log(this.projects);
   }
 
   public addProject(title: string, description: string, numOfPeople: number) {
@@ -180,6 +180,7 @@ class ProjectState {
       people: numOfPeople,
     };
     this.projects.push(newProject);
+    this.notify();
   }
 
   static getInstance() {
@@ -192,10 +193,39 @@ class ProjectState {
 
 const projectState = ProjectState.getInstance();
 
-class ProjectList {
+class Project {
+  public templateElement: HTMLTemplateElement;
+  public hostElement: HTMLElement;
+  public listItem: HTMLElement;
+  public title: string;
+  public description: string;
+  public people: number;
+  constructor(title: string, description: string, people: number) {
+    this.templateElement = document.getElementById(
+      "single-project",
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById(
+      "active-projects-list",
+    )! as HTMLElement;
+    this.listItem = document.importNode(this.templateElement.content, true)
+      .firstElementChild as HTMLElement;
+    this.title = title;
+    this.description = description;
+    this.people = people;
+    this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
+
+    this.attach();
+  }
+  private attach() {
+    this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
+  }
+}
+
+class ProjectList implements Observer {
   public templateElement: HTMLTemplateElement;
   public hostElement: HTMLDivElement;
   public element: HTMLElement;
+  // private assignedProjects: any[] = [];
   constructor(private type: "active" | "finished") {
     this.templateElement = document.getElementById(
       "project-list",
@@ -211,6 +241,14 @@ class ProjectList {
 
     this.renderContent();
     this.attach();
+  }
+
+  update(project: any) {
+    console.log("Reacting to event ");
+    project.map((p: any) => {
+      console.log(p);
+      new Project(p.title, p.description, p.people);
+    });
   }
 
   private renderContent() {
@@ -321,4 +359,5 @@ class ProjectInput {
 
 const prjInput = new ProjectInput();
 const activeProjectsList = new ProjectList("active");
-const inactiveProjectsList = new ProjectList("finished");
+const fineshedProjectsList = new ProjectList("finished");
+projectState.attach(activeProjectsList);
