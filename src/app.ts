@@ -132,19 +132,54 @@ function validate(input: Validatable) {
 
 // Instead of the approach above, I'll try to create a class that will manage the state of the application.
 
+interface Observer {
+  update(project: any): void;
+}
+
 class ProjectState {
   private projects: any[] = [];
   private static instance: ProjectState;
+  private observers: Observer[] = [];
+  private constructor() {
+    this.projects = [];
+  }
 
-  private constructor() {}
+  public attach(observer: any) {
+    // check if observer is already attached
+    const isExist = this.observers.includes(observer);
+    if (isExist) {
+      return console.log("Observer already attached.");
+    } else {
+      console.log(`Attached and observer: ${observer}`);
+      this.observers.push(observer);
+    }
+  }
 
-  addProject(title: string, description: string, numOfPeople: number) {
+  public detach(observer: any) {
+    const obsIndex = this.observers.indexOf(observer);
+    if (obsIndex === -1) {
+      return console.log("Non-existent observer");
+    } else {
+      console.log(`Observer removed: ${observer}`);
+      this.observers.splice(obsIndex, 1);
+    }
+  }
+
+  public notify() {
+    console.log("Notifying observers...");
+    for (const observer of this.observers) {
+      observer.update(this);
+    }
+  }
+
+  public addProject(title: string, description: string, numOfPeople: number) {
     const newProject = {
       id: Math.random().toString(),
       title: title,
       description: description,
       people: numOfPeople,
     };
+    this.projects.push(newProject);
   }
 
   static getInstance() {
@@ -269,7 +304,7 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput;
-      console.log(title, description, people);
+      projectState.addProject(title, description, people);
       // let newProject = new Project(title, description, people, "active"); Old approach
       this.clearInputs();
     }
