@@ -93,40 +93,42 @@ function validate(input: Validatable) {
   return isValid;
 }
 
-class Project {
-  public title: string;
-  public description: string;
-  public people: number;
-  public type: "active" | "finished";
-  public templateElement: HTMLTemplateElement;
-  public hostElement: HTMLElement;
-  public listItem: HTMLElement;
-  constructor(
-    title: string,
-    description: string,
-    people: number,
-    type: "active" | "finished",
-  ) {
-    this.title = title;
-    this.description = description;
-    this.people = people;
-    this.type = type;
-    this.templateElement = document.getElementById(
-      "single-project",
-    )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById(
-      "active-projects-list",
-    )! as HTMLElement;
-    this.listItem = document.importNode(this.templateElement.content, true)
-      .firstElementChild as HTMLElement;
-    this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
-
-    this.attach();
-  }
-  private attach() {
-    this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
-  }
-}
+// The following code is commented out because I'm taking a different approach and setting a global state much like
+// front-end frameworks such as React and Angular.
+// class Project {
+//   public title: string;
+//   public description: string;
+//   public people: number;
+//   public type: "active" | "finished";
+//   public templateElement: HTMLTemplateElement;
+//   public hostElement: HTMLElement;
+//   public listItem: HTMLElement;
+//   constructor(
+//     title: string,
+//     description: string,
+//     people: number,
+//     type: "active" | "finished",
+//   ) {
+//     this.title = title;
+//     this.description = description;
+//     this.people = people;
+//     this.type = type;
+//     this.templateElement = document.getElementById(
+//       "single-project",
+//     )! as HTMLTemplateElement;
+//     this.hostElement = document.getElementById(
+//       "active-projects-list",
+//     )! as HTMLElement;
+//     this.listItem = document.importNode(this.templateElement.content, true)
+//       .firstElementChild as HTMLElement;
+//     this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
+//
+//     this.attach();
+//   }
+//   private attach() {
+//     this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
+//   }
+// }
 
 class ProjectList {
   public templateElement: HTMLTemplateElement;
@@ -240,9 +242,9 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput;
-      let newProject = new Project(title, description, people, "active");
 
-      console.log(newProject);
+      // let newProject = new Project(title, description, people, "active"); Old approach
+
       this.clearInputs();
     }
   }
