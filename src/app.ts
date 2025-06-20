@@ -130,6 +130,33 @@ function validate(input: Validatable) {
 //   }
 // }
 
+// Instead of the approach above, I'll try to create a class that will manage the state of the application.
+
+class ProjectState {
+  private projects: any[] = [];
+  private static instance: ProjectState;
+
+  private constructor() {}
+
+  addProject(title: string, description: string, numOfPeople: number) {
+    const newProject = {
+      id: Math.random().toString(),
+      title: title,
+      description: description,
+      people: numOfPeople,
+    };
+  }
+
+  static getInstance() {
+    if (this.instance) {
+      return this.instance;
+    }
+    return new ProjectState();
+  }
+}
+
+const projectState = ProjectState.getInstance();
+
 class ProjectList {
   public templateElement: HTMLTemplateElement;
   public hostElement: HTMLDivElement;
@@ -242,9 +269,8 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput;
-
+      console.log(title, description, people);
       // let newProject = new Project(title, description, people, "active"); Old approach
-
       this.clearInputs();
     }
   }
