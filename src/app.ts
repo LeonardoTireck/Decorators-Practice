@@ -245,6 +245,12 @@ class ProjectList implements Observer {
 
   update(project: any) {
     console.log("Reacting to event ");
+    const ulElement = document.getElementById(
+      "active-projects-list",
+    )! as HTMLUListElement;
+    while (ulElement.firstChild) {
+      ulElement.removeChild(ulElement.firstChild);
+    }
     project.map((p: any) => {
       console.log(p);
       new Project(p.title, p.description, p.people);
