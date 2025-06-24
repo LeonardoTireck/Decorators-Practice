@@ -210,6 +210,14 @@ class Project {
 class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
   private project: Project;
 
+  get person() {
+    if (this.project.people === 1) {
+      return "1 person";
+    } else {
+      return `${this.project.people} persons`;
+    }
+  }
+
   constructor(
     project: Project,
     public hostElementId: string,
@@ -220,8 +228,7 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
   }
   renderContent(): void {
     this.element.querySelector("h2")!.textContent = this.project.title;
-    this.element.querySelector("h3")!.textContent =
-      `Number of People: ${this.project.people}`;
+    this.element.querySelector("h3")!.textContent = this.person + " assigned.";
     this.element.querySelector("p")!.textContent = this.project.description;
   }
   configure(): void {}
