@@ -129,14 +129,12 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 }
 
 interface Observer {
-  update(project: any): void;
+  update(projects: Project[]): void;
 }
 
-class ProjectState {
-  private projects: any[] = [];
-  private static instance: ProjectState;
-  private observers: Observer[] = [];
-  private constructor() {}
+// Creating a base class for managing state.
+abstract class State {
+  protected observers: Observer[] = [];
 
   public attach(observer: Observer) {
     // check if observer is already attached
@@ -157,6 +155,14 @@ class ProjectState {
       console.log(`Observer removed: ${observer}`);
       this.observers.splice(obsIndex, 1);
     }
+  }
+}
+
+class ProjectState extends State {
+  private projects: Project[] = [];
+  private static instance: ProjectState;
+  private constructor() {
+    super();
   }
 
   public notify() {
