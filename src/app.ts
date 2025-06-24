@@ -93,44 +93,40 @@ function validate(input: Validatable) {
   return isValid;
 }
 
-// The following code is commented out because I'm taking a different approach and setting a global state much like
-// front-end frameworks such as React and Angular.
-// class Project {
-//   public title: string;
-//   public description: string;
-//   public people: number;
-//   public type: "active" | "finished";
-//   public templateElement: HTMLTemplateElement;
-//   public hostElement: HTMLElement;
-//   public listItem: HTMLElement;
-//   constructor(
-//     title: string,
-//     description: string,
-//     people: number,
-//     type: "active" | "finished",
-//   ) {
-//     this.title = title;
-//     this.description = description;
-//     this.people = people;
-//     this.type = type;
-//     this.templateElement = document.getElementById(
-//       "single-project",
-//     )! as HTMLTemplateElement;
-//     this.hostElement = document.getElementById(
-//       "active-projects-list",
-//     )! as HTMLElement;
-//     this.listItem = document.importNode(this.templateElement.content, true)
-//       .firstElementChild as HTMLElement;
-//     this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
-//
-//     this.attach();
-//   }
-//   private attach() {
-//     this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
-//   }
-// }
+// Creating a Base Class for components. Using generics to keep the types of HTML Elemets
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
+  templateElement: HTMLTemplateElement;
+  hostElement: T;
+  element: U;
 
-// Instead of the approach above, I'll try to create a class that will manage the state of the application.
+  constructor(
+    templateId: string,
+    hostElementId: string,
+    insertAtStart: boolean,
+    newElementId?: string,
+  ) {
+    this.templateElement = document.getElementById(
+      templateId,
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById(hostElementId)! as T;
+    this.element = document.importNode(this.templateElement.content, true)
+      .firstElementChild as U;
+    if (newElementId) {
+      this.element.id = newElementId;
+    }
+    this.attach(insertAtStart);
+  }
+
+  private attach(insertAtStart: boolean) {
+    this.hostElement.insertAdjacentElement(
+      insertAtStart ? "afterbegin" : "beforeend",
+      this.element,
+    );
+  }
+
+  abstract configure(): void;
+  abstract renderContent(): void;
+}
 
 interface Observer {
   update(project: any): void;
@@ -167,18 +163,19 @@ class ProjectState {
     console.log("Notifying observers...");
     for (const observer of this.observers) {
       const projectsCopy = this.projects.slice();
+      console.log(projectsCopy);
       observer.update(projectsCopy);
     }
-    console.log(this.projects);
   }
 
   public addProject(title: string, description: string, numOfPeople: number) {
-    const newProject = {
-      id: Math.random().toString(),
-      title: title,
-      description: description,
-      people: numOfPeople,
-    };
+    let newProject = new Project(
+      Math.random().toString(),
+      title,
+      description,
+      numOfPeople,
+      "active",
+    );
     this.projects.push(newProject);
     this.notify();
   }
@@ -187,85 +184,51 @@ class ProjectState {
     if (this.instance) {
       return this.instance;
     }
-    return new ProjectState();
+    this.instance = new ProjectState();
+    return this.instance;
   }
 }
 
 const projectState = ProjectState.getInstance();
 
 class Project {
-  public templateElement: HTMLTemplateElement;
-  public hostElement: HTMLElement;
-  public listItem: HTMLElement;
-  public title: string;
-  public description: string;
-  public people: number;
-  constructor(title: string, description: string, people: number) {
-    this.templateElement = document.getElementById(
-      "single-project",
-    )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById(
-      "active-projects-list",
-    )! as HTMLElement;
-    this.listItem = document.importNode(this.templateElement.content, true)
-      .firstElementChild as HTMLElement;
-    this.title = title;
-    this.description = description;
-    this.people = people;
-    this.listItem.textContent = `Title: ${this.title}, Description: ${this.description}, People: ${this.people}`;
-
-    this.attach();
-  }
-  private attach() {
-    this.hostElement.insertAdjacentElement("afterbegin", this.listItem);
-  }
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: "active" | "finished",
+  ) {}
 }
 
-class ProjectList implements Observer {
-  public templateElement: HTMLTemplateElement;
-  public hostElement: HTMLDivElement;
-  public element: HTMLElement;
-  // private assignedProjects: any[] = [];
+class ProjectList
+  extends Component<HTMLDivElement, HTMLElement>
+  implements Observer
+{
   constructor(private type: "active" | "finished") {
-    this.templateElement = document.getElementById(
-      "project-list",
-    )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById("app")! as HTMLDivElement;
-
-    // const importedNode = document.importNode(
-    //   this.templateElement.content,
-    //   true,
-    // ).firstElementChild;
-    this.element = document.importNode(this.templateElement.content, true)
-      .firstElementChild as HTMLElement;
+    super("project-list", "app", false, `${type}-projects`);
 
     this.renderContent();
-    this.attach();
   }
 
-  update(project: any) {
-    console.log("Reacting to event ");
-    const ulElement = document.getElementById(
-      "active-projects-list",
+  update(projectsCopy: Project[]) {
+    const hostProjectList = document.getElementById(
+      `${this.type}-projects-list`,
     )! as HTMLUListElement;
-    while (ulElement.firstChild) {
-      ulElement.removeChild(ulElement.firstChild);
-    }
-    project.map((p: any) => {
-      console.log(p);
-      new Project(p.title, p.description, p.people);
+    hostProjectList.innerHTML = "";
+    projectsCopy.map((p) => {
+      let newListItem = document.createElement("li");
+      newListItem.textContent = `Title: ${p.title}, Description: ${p.description}, Number of People: ${p.people}`;
+      hostProjectList.insertAdjacentElement("afterbegin", newListItem);
     });
   }
 
-  private renderContent() {
-    this.element.id = this.type + "-projects";
+  configure() {}
+
+  renderContent() {
     this.element.querySelector("ul")!.id = `${this.type}-projects-list`;
     this.element.querySelector("h2")!.textContent =
       this.type.toUpperCase() + " PROJECTS";
-  }
-
-  private attach() {
-    this.hostElement.insertAdjacentElement("beforeend", this.element);
   }
 }
 
@@ -349,7 +312,6 @@ class ProjectInput {
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput;
       projectState.addProject(title, description, people);
-      // let newProject = new Project(title, description, people, "active"); Old approach
       this.clearInputs();
     }
   }
