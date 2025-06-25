@@ -280,16 +280,22 @@ class ProjectList
   @autobind
   dropHandler(_event: DragEvent): void {
     console.log("Drop event handler");
+    let ulElement = this.element.querySelector("ul")!;
+    ulElement.classList.remove("droppable");
   }
 
   @autobind
   dragOverHandler(_event: DragEvent): void {
     console.log("Drag over event handler");
+    let ulElement = this.element.querySelector("ul")!;
+    ulElement.classList.add("droppable");
   }
 
   @autobind
   dragLeaveHandler(_event: DragEvent): void {
     console.log("Drag leave event handler");
+    let ulElement = this.element.querySelector("ul")!;
+    ulElement.classList.remove("droppable");
   }
 
   update(projectsCopy: Project[]) {
@@ -304,11 +310,9 @@ class ProjectList
 
   configure() {
     this.element.querySelector("ul")!.id = `${this.type}-projects-list`; // For CSS
-    if (this.type === "finished") {
-      this.element.addEventListener("drop", this.dropHandler);
-      this.element.addEventListener("dragenter", this.dragOverHandler);
-      this.element.addEventListener("dragleave", this.dragLeaveHandler);
-    }
+    this.element.addEventListener("drop", this.dropHandler);
+    this.element.addEventListener("dragover", this.dragOverHandler);
+    this.element.addEventListener("dragleave", this.dragLeaveHandler);
   }
 
   renderContent() {
