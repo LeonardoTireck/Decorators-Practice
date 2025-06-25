@@ -198,6 +198,10 @@ class ProjectState extends State {
     this.notify();
   }
 
+  get allProjects() {
+    return this.projects;
+  }
+
   static getInstance() {
     if (this.instance) {
       return this.instance;
@@ -244,8 +248,9 @@ class ProjectItem
   }
 
   @autobind
-  dragStartHandler(_event: DragEvent): void {
-    console.log("Drag event started");
+  dragStartHandler(event: DragEvent): void {
+    event.dataTransfer!.setData("text/plain", this.project.id);
+    event.dataTransfer!.effectAllowed = "move";
   }
 
   @autobind
@@ -278,17 +283,26 @@ class ProjectList
   }
 
   @autobind
-  dropHandler(_event: DragEvent): void {
+  dropHandler(event: DragEvent): void {
     console.log("Drop event handler");
+    const projectId = event.dataTransfer?.getData("text/plain");
+    const project = projectState.allProjects.filter(
+      (p) => p.id === projectId,
+    )[0];
+    project.status = this.type;
+    // new ProjectItem(project, this.element.querySelector("ul")!.id);
+    projectState.notify();
     let ulElement = this.element.querySelector("ul")!;
     ulElement.classList.remove("droppable");
   }
 
   @autobind
-  dragOverHandler(_event: DragEvent): void {
-    console.log("Drag over event handler");
-    let ulElement = this.element.querySelector("ul")!;
-    ulElement.classList.add("droppable");
+  dragOverHandler(event: DragEvent): void {
+    if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
+      event.preventDefault();
+      let ulElement = this.element.querySelector("ul")!;
+      ulElement.classList.add("droppable");
+    }
   }
 
   @autobind
@@ -298,6 +312,7 @@ class ProjectList
     ulElement.classList.remove("droppable");
   }
 
+  @autobind
   update(projectsCopy: Project[]) {
     const hostProjectList = document.getElementById(
       `${this.type}-projects-list`,
