@@ -63,6 +63,18 @@ function autobind(
 //   return descriptor;
 // }
 //
+// Creating an interface for draggable components
+interface Draggable {
+  dragStartHandler(event: DragEvent): void;
+  dragEndHandler(event: DragEvent): void;
+}
+
+// Creating an interface for the target of the drag "Droppable"
+interface DragTarget {
+  dragOverHandler(event: DragEvent): void;
+  dropHandler(event: DragEvent): void;
+  dragLeaveHandler(event: DragEvent): void;
+}
 
 interface Validatable {
   value: string | number;
@@ -207,7 +219,10 @@ class Project {
   ) {}
 }
 
-class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+class ProjectItem
+  extends Component<HTMLUListElement, HTMLLIElement>
+  implements Draggable
+{
   private project: Project;
 
   get person() {
@@ -225,24 +240,56 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
     super("single-project", hostElementId, false, project.id);
     this.project = project;
     this.renderContent();
+    this.configure();
   }
+
+  @autobind
+  dragStartHandler(_event: DragEvent): void {
+    console.log("Drag event started");
+  }
+
+  @autobind
+  dragEndHandler(_event: DragEvent): void {
+    console.log("Drag event ended");
+  }
+
   renderContent(): void {
+    this.element.draggable = true;
     this.element.querySelector("h2")!.textContent = this.project.title;
     this.element.querySelector("h3")!.textContent = this.person + " assigned.";
     this.element.querySelector("p")!.textContent = this.project.description;
   }
-  configure(): void {}
+  configure(): void {
+    this.element.addEventListener("dragstart", this.dragStartHandler);
+
+    this.element.addEventListener("dragend", this.dragEndHandler);
+  }
 }
 
 class ProjectList
   extends Component<HTMLDivElement, HTMLElement>
-  implements Observer
+  implements Observer, DragTarget
 {
   constructor(private type: "active" | "finished") {
     super("project-list", "app", false, `${type}-projects`);
 
     this.configure();
     this.renderContent();
+  }
+
+  @autobind
+  dropHandler(_event: DragEvent): void {
+    console.log("Drop event handler");
+  }
+
+  @autobind
+  dragOverHandler(_event: DragEvent): void {
+    console.log("Drag over event handler");
+  }
+
+  @autobind
+  dragLeaveHandler(_event: DragEvent): void {
+    console.log("Drag leave event handler");
   }
 
   update(projectsCopy: Project[]) {
@@ -257,6 +304,11 @@ class ProjectList
 
   configure() {
     this.element.querySelector("ul")!.id = `${this.type}-projects-list`; // For CSS
+    if (this.type === "finished") {
+      this.element.addEventListener("drop", this.dropHandler);
+      this.element.addEventListener("dragenter", this.dragOverHandler);
+      this.element.addEventListener("dragleave", this.dragLeaveHandler);
+    }
   }
 
   renderContent() {
