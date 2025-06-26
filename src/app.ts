@@ -141,7 +141,7 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 }
 
 interface Observer {
-  update(projects: Project[]): void;
+  update(...args: any[]): void;
 }
 
 // Creating a base class for managing state.
@@ -154,7 +154,6 @@ abstract class State {
     if (isExist) {
       return console.log("Observer already attached.");
     } else {
-      console.log(`Attached an observer`);
       this.observers.push(observer);
     }
   }
@@ -178,7 +177,6 @@ class ProjectState extends State {
   }
 
   public notify() {
-    console.log("Notifying observers...");
     const projectsCopy = this.projects.slice();
     console.log(projectsCopy);
     for (const observer of this.observers) {
@@ -254,9 +252,7 @@ class ProjectItem
   }
 
   @autobind
-  dragEndHandler(_event: DragEvent): void {
-    console.log("Drag event ended");
-  }
+  dragEndHandler(_event: DragEvent): void {}
 
   renderContent(): void {
     this.element.draggable = true;
@@ -284,13 +280,12 @@ class ProjectList
 
   @autobind
   dropHandler(event: DragEvent): void {
-    console.log("Drop event handler");
     const projectId = event.dataTransfer?.getData("text/plain");
-    const project = projectState.allProjects.filter(
-      (p) => p.id === projectId,
-    )[0];
+    const project = projectState.allProjects.find((p) => p.id === projectId);
+    if (!project || project.status === this.type) {
+      return console.log("Project not found or project did not change status.");
+    }
     project.status = this.type;
-    // new ProjectItem(project, this.element.querySelector("ul")!.id);
     projectState.notify();
     let ulElement = this.element.querySelector("ul")!;
     ulElement.classList.remove("droppable");
@@ -307,7 +302,6 @@ class ProjectList
 
   @autobind
   dragLeaveHandler(_event: DragEvent): void {
-    console.log("Drag leave event handler");
     let ulElement = this.element.querySelector("ul")!;
     ulElement.classList.remove("droppable");
   }
@@ -319,7 +313,9 @@ class ProjectList
     )! as HTMLUListElement;
     hostProjectList.innerHTML = "";
     projectsCopy.forEach((p) => {
-      new ProjectItem(p, this.element.querySelector("ul")!.id);
+      if (p.status === this.type) {
+        new ProjectItem(p, this.element.querySelector("ul")!.id);
+      }
     });
   }
 
@@ -414,3 +410,4 @@ const prjInput = new ProjectInput();
 const activeProjectsList = new ProjectList("active");
 const fineshedProjectsList = new ProjectList("finished");
 projectState.attach(activeProjectsList);
+projectState.attach(fineshedProjectsList);
